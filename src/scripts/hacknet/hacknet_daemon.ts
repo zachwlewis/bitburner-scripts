@@ -8,7 +8,7 @@ import { NS } from '@ns';
 import { disable_logs } from '/scripts/util/logging';
 import { get_cache_resource, set_cache_resource } from '/scripts/util/cache';
 
-type UpgradeType = 'level' | 'ram' | 'cores' | 'node';
+type UpgradeType = 'level' | 'ram' | 'cores' | 'node' | 'cache';
 
 interface Upgrade {
   type: UpgradeType;
@@ -20,6 +20,7 @@ interface NodeUpgrade {
   level: Upgrade;
   ram: Upgrade;
   cores: Upgrade;
+  cache: Upgrade;
   cheapest: Upgrade;
 }
 
@@ -28,7 +29,7 @@ export interface HacknetParams {
   minNodes: number;
 }
 
-const DEFAULT_PARAMS: HacknetParams = {
+export const DEFAULT_PARAMS: HacknetParams = {
   reserves: Infinity,
   minNodes: 6,
 };
@@ -51,6 +52,16 @@ export async function main(ns: NS): Promise<void> {
     const targetUpgrade = mustBuyNode ? newNode : cheapestUpgrade.cost < newNode.cost ? cheapestUpgrade : newNode;
 
     const currentMoney = ns.getServerMoneyAvailable('home');
+    const maxHashes = ns.hacknet.hashCapacity();
+    const hashes = ns.hacknet.numHashes();
+
+    // Bleed hashes at max.
+    if (hashes === maxHashes) {
+      // Spend 10% of hashes for cashes
+      const purchases = Math.ceil((maxHashes * 0.1) / 4);
+      ns.hacknet.spendHashes('Sell for Money', '', purchases);
+    }
+
     const money = currentMoney - params.reserves;
 
     while (logs.length > 10) logs.shift();
@@ -60,6 +71,7 @@ export async function main(ns: NS): Promise<void> {
     ns.printf(`╭──╼ HACK.NET ╾──────────────────────────╌╌`);
     ns.printf(`│ Nodes: ${nodeCount}`);
     ns.printf(`│ Money: ${ns.nFormat(currentMoney, '$0.00a')}`);
+    ns.printf(`│ Hashes: ${ns.nFormat(hashes, '0.00a')}/${ns.nFormat(maxHashes, '0.00a')}`);
     ns.printf(`│ Reserves: ${params.reserves === Infinity ? '∞' : ns.nFormat(params.reserves, '$0.00a')}`);
     ns.printf(`├──╼ LOGS ╾──────────────────────────────╌╌`);
     for (const log of logs) ns.printf(`│ ${log}`);
@@ -89,6 +101,10 @@ export async function main(ns: NS): Promise<void> {
         logs.push(`Upgrading RAM for hacknet-server-${nodeIndex}: ${ns.nFormat(targetUpgrade.cost, '$0.00a')}.`);
         ns.hacknet.upgradeRam(nodeIndex, 1);
         break;
+      case 'cache':
+        logs.push(`Upgrading RAM for hacknet-server-${nodeIndex}: ${ns.nFormat(targetUpgrade.cost, '$0.00a')}.`);
+        ns.hacknet.upgradeCache(nodeIndex, 1);
+        break;
     }
   }
 }
@@ -112,12 +128,14 @@ function gatherAllUpgrades(ns: NS): NodeUpgrade[] {
       { type: 'level', cost: ns.hacknet.getLevelUpgradeCost(i, 1) },
       { type: 'ram', cost: ns.hacknet.getRamUpgradeCost(i, 1) },
       { type: 'cores', cost: ns.hacknet.getCoreUpgradeCost(i, 1) },
+      { type: 'cache', cost: ns.hacknet.getCacheUpgradeCost(i, 1) },
     ];
     nodeUpgrades.push({
       index: i,
       level: upgrades[0],
       ram: upgrades[1],
       cores: upgrades[2],
+      cache: upgrades[3],
       cheapest: upgrades.reduce((p, c) => (p.cost < c.cost ? p : c)),
     });
   }

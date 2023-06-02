@@ -11,6 +11,8 @@ export interface NetHost {
   difficulty: number;
   depth: number;
   isPurchased: boolean;
+  path: string[];
+  isBackdoored: boolean;
 }
 
 export async function main(ns: NS): Promise<void> {
@@ -32,9 +34,10 @@ export const unowned_hosts = (ns: NS): NetHost[] => all_hosts(ns).filter((value)
 export const rooted_hosts = (ns: NS): NetHost[] => all_hosts(ns).filter((value) => ns.hasRootAccess(value.hostname));
 
 /** Scans the network, returning a list of all hosts. */
-function gatherHosts(ns: NS, output: NetHost[], host = 'home', parent = '', depth = 0) {
+function gatherHosts(ns: NS, output: NetHost[], host = 'home', path: string[] = [], depth = 0) {
   // populate current host
   const server = ns.getServer(host);
+  const parent = path.length === 0 ? '' : path[path.length - 1];
   output.push({
     hostname: server.hostname,
     ip: server.ip,
@@ -44,10 +47,12 @@ function gatherHosts(ns: NS, output: NetHost[], host = 'home', parent = '', dept
     difficulty: server.minDifficulty,
     depth: depth,
     isPurchased: server.purchasedByPlayer,
+    path: path,
+    isBackdoored: server.backdoorInstalled,
   });
 
   const children = ns.scan(host);
   for (const child of children) {
-    if (child !== parent) gatherHosts(ns, output, child, host, depth + 1);
+    if (child !== parent) gatherHosts(ns, output, child, path.concat([host]), depth + 1);
   }
 }

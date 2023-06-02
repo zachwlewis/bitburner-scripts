@@ -21,7 +21,7 @@ export interface ProcessParams {
   onlyHome: boolean;
 }
 
-const DEFAULT_PARAMS: ProcessParams = {
+export const DEFAULT_PARAMS: ProcessParams = {
   count: 500,
   threads: 1,
   homeReserve: 32,
@@ -62,6 +62,8 @@ export async function main(ns: NS): Promise<void> {
     for (const host of rooted_hosts(ns)) {
       // Copy scripts to remote hosts.
       if (params.onlyHome && host.hostname !== 'home') continue;
+      // Don't run scripts on hacknet servers
+      if (host.hostname.search('hacknet-server') >= 0) continue;
       if (host.hostname !== 'home') ns.scp([attackScript, colorScript, portScript], host.hostname);
       const scriptRam = ns.getScriptRam(attackScript, host.hostname);
       const maxRam = ns.getServerMaxRam(host.hostname);

@@ -50,6 +50,7 @@ export async function main(ns: NS): Promise<void> {
   ns.tprintf(`│  CODING_CONTRACTS  │`);
   ns.tprintf(`├────────────────────┴───────────────────────╌╌`);
   let first = true;
+  const results: ContractResult[] = [];
   for (const contract of contracts) {
     if (contract.type !== currentType) {
       currentType = contract.type;
@@ -59,12 +60,57 @@ export async function main(ns: NS): Promise<void> {
       ns.tprintf(`├────────────────────────────────────────────╌╌`);
     }
     const result: ContractResult = FLAGS.solve ? attemptContract(ns, contract) : { success: true, result: '' };
+    results.push(result);
     const color = result.success ? Colors.green : Colors.red;
     ns.tprintf(`├╼ ${color}${contract.host} ${contract.file}${Colors.reset}`);
     ns.tprintf(`│    ${result.result}`);
     if (!result.success) ns.tprintf(`│    ${result.answer || 'Unanswered'}`);
   }
   ns.tprintf(`╰────────────────────────────────────────────╌╌`);
+  reportResults(ns, results);
+}
+
+function reportResults(ns: NS, results: ContractResult[]): void {
+  const count = results.length;
+  let successes = 0;
+  let failures = 0;
+  const rep_map: Map<string, number> = new Map<string, number>();
+  let money = 0;
+  money++;
+
+  const money_match = new RegExp('Gained \\$(\\d+\\.\\d+)(\\w)');
+  const multi_rep_match = new RegExp('Gained (\\d+) reputation for each of the following factions: (.+)');
+  const single_rep_match = new RegExp('Gained (\\d+) faction reputation for (.+)');
+  for (const result of results) {
+    result.success ? successes++ : failures++;
+
+    const money_result = money_match.exec(result.result);
+    if (money_result) {
+      money += parseFloat(money_result[1]);
+      continue;
+    }
+
+    const single_rep_result = single_rep_match.exec(result.result);
+    if (single_rep_result) {
+      const rep_gain = parseInt(single_rep_result[1]);
+      const faction_name = single_rep_result[2];
+      rep_map.set(faction_name, (rep_map.get(faction_name) || 0) + rep_gain);
+      continue;
+    }
+
+    const multi_rep_result = multi_rep_match.exec(result.result);
+    if (multi_rep_result) {
+      const rep_gain = parseInt(multi_rep_result[1]);
+      const factions: string[] = multi_rep_result[2].split(', ');
+      factions.forEach((s) => {
+        rep_map.set(s, (rep_map.get(s) || 0) + rep_gain);
+      });
+    }
+  }
+
+  ns.tprint(`Solved ${count}: ${successes} passed, ${failures} failed`);
+  ns.tprint(`Earned $${money}`);
+  rep_map.forEach((value, key) => ns.tprint(`${key}: ${value}`));
 }
 
 function processResult(attempt: string): ContractResult {
@@ -196,3 +242,7 @@ function gatherContracts(ns: NS, host: string, parent: string, output: Contract[
 
   return output;
 }
+
+// Gained $225.000m
+// Gained 1250 reputation for each of the following factions: ECorp, MegaCorp, BitRunners, The Black Hand, NiteSec, Volhaven, Tetrads, Slum Snakes, Tian Di Hui, CyberSec
+// Gained 2500 faction reputation for ECorp
