@@ -41,14 +41,14 @@ function gatherHosts(ns: NS, output: NetHost[], host = 'home', path: string[] = 
   output.push({
     hostname: server.hostname,
     ip: server.ip,
-    level: server.requiredHackingSkill,
-    ports: server.numOpenPortsRequired,
-    money: server.moneyMax,
-    difficulty: server.minDifficulty,
+    level: server.requiredHackingSkill ?? 0,
+    ports: server.numOpenPortsRequired ?? 0,
+    money: server.moneyMax ?? 0,
+    difficulty: server.minDifficulty ?? 1,
     depth: depth,
     isPurchased: server.purchasedByPlayer,
     path: path,
-    isBackdoored: server.backdoorInstalled,
+    isBackdoored: server.backdoorInstalled ?? false,
   });
 
   const children = ns.scan(host);

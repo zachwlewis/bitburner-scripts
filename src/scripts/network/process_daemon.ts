@@ -45,7 +45,7 @@ export async function main(ns: NS): Promise<void> {
     let count = getProcessCount(ns, attackScript);
     const saturation = params.count === 0 ? 1 : count / params.count;
     ns.clearLog();
-    ns.print(`${count}/${params.count} (${ns.nFormat(saturation, '0.0%')})`);
+    ns.print(`${count}/${params.count} (${ns.formatPercent(saturation)})`);
 
     // #TODO: Kill hosts when we have too many.
     if (count > params.count) {

@@ -23,6 +23,8 @@ import { find_all_valid_expressions } from '/scripts/contracts/lib/validexpressi
 import { total_ways_to_sum_1, total_ways_to_sum_2 } from '/scripts/contracts/lib/waystosum';
 import { generate_ip } from '/scripts/contracts/lib/generateip';
 import { proper_2_coloring } from '/scripts/contracts/lib/coloring';
+import { formatMoney } from '/scripts/util/logging';
+import { parseFormattedNumber } from '/scripts/util/strings';
 
 /** Describes a contract. */
 interface Contract {
@@ -76,9 +78,8 @@ function reportResults(ns: NS, results: ContractResult[]): void {
   let failures = 0;
   const rep_map: Map<string, number> = new Map<string, number>();
   let money = 0;
-  money++;
 
-  const money_match = new RegExp('Gained \\$(\\d+\\.\\d+)(\\w)');
+  const money_match = new RegExp('Gained \\$(\\d+\\.?\\d+\\w?)');
   const multi_rep_match = new RegExp('Gained (\\d+) reputation for each of the following factions: (.+)');
   const single_rep_match = new RegExp('Gained (\\d+) faction reputation for (.+)');
   for (const result of results) {
@@ -86,7 +87,7 @@ function reportResults(ns: NS, results: ContractResult[]): void {
 
     const money_result = money_match.exec(result.result);
     if (money_result) {
-      money += parseFloat(money_result[1]);
+      money += parseFormattedNumber(money_result[1]);
       continue;
     }
 
@@ -109,7 +110,7 @@ function reportResults(ns: NS, results: ContractResult[]): void {
   }
 
   ns.tprint(`Solved ${count}: ${successes} passed, ${failures} failed`);
-  ns.tprint(`Earned $${money}`);
+  if (money > 0) ns.tprint(`Earned ${formatMoney(ns, money)}`);
   rep_map.forEach((value, key) => ns.tprint(`${key}: ${value}`));
 }
 

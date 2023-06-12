@@ -8,7 +8,7 @@ Relies on workers to pull targets and hack them.
 
 import { NS } from '@ns';
 import { NetHost, unowned_hosts } from '/scripts/network/hosts';
-import { disable_logs } from '/scripts/util/logging';
+import { disable_logs, formatMoney } from '/scripts/util/logging';
 import { Colors } from '/scripts/util/colors';
 import { AttackRequest, AttackResponse, AttackType, ensure_write, P_ATK_IN, P_ATK_OUT } from '/scripts/util/ports';
 import { get_cache_resource, set_cache_resource } from '/scripts/util/cache';
@@ -110,11 +110,11 @@ export async function main(ns: NS): Promise<void> {
     let workers = 0;
     attackerMap.forEach((value) => (workers += value));
 
-    const earning_stats = ns.nFormat(earnings, '$0.00a').padEnd(10, ' ');
-    const total_stats = ns.nFormat(earnings / uptime, '$0.00a');
+    const earning_stats = formatMoney(ns, earnings).padEnd(10, ' ');
+    const total_stats = formatMoney(ns, earnings / uptime);
     //╾╼
     ns.print('├──╼ TARGET_PARAMS ╾──────────────────────────────╌╌');
-    ns.print(`│ Money         ${ns.nFormat(params.money, '0.00%')}`);
+    ns.print(`│ Money         ${ns.formatPercent(params.money)}`);
     ns.print(`│ Difficulty    ${params.difficulty}`);
     ns.print(`│ Level         ${paramHackingLevel(ns, params)} (${params.levelTarget})`);
     ns.print('├──╼ DAEMON_STATUS ╾──────────────────────────────╌╌');
@@ -203,8 +203,8 @@ function outputTarget(ns: NS, log: TargetLog, workers: number): void {
       break;
   }
   const host = log.host.padEnd(18, ' ');
-  const money = ns.nFormat(log.money, '0.00%').padStart(8, ' ');
-  const difficulty = ns.nFormat(log.difficulty, '0.00').padStart(8, ' ');
+  const money = ns.formatPercent(log.money).padStart(8, ' ');
+  const difficulty = ns.formatNumber(log.difficulty, 2, 1, false).padStart(8, ' ');
   const wkr = workers.toString().padStart(8, ' ');
 
   ns.print(`├╼ ${mode} ${host} ${color}${money} ${difficulty}${wkr}${Colors.reset}`);

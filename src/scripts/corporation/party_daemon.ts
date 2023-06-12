@@ -19,10 +19,10 @@ export async function main(ns: NS): Promise<void> {
 function party(ns: NS, division: string): void {
   ns.corporation.getDivision(division).cities.forEach((city) => {
     const office = ns.corporation.getOffice(division, city);
-    const needsCoffee = office.avgEne < 95;
-    const needsParty = office.avgHap < 95 || office.avgMor < 95;
+    const needsCoffee = office.avgEnergy < 95;
+    const needsParty = office.avgMorale < 95;
     if (needsCoffee) {
-      ns.corporation.buyCoffee(division, city);
+      ns.corporation.buyTea(division, city);
       ns.printf(`Low energy detected in ${division}, ${city} office.`);
     }
     if (needsParty) {

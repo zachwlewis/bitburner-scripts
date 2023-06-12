@@ -3,6 +3,7 @@ import { NS } from '@ns';
 import { set_cache_resource, get_cache_resource } from '/scripts/util/cache';
 import { Colors } from '/scripts/util/colors';
 import { DEFAULT_PARAMS, HacknetParams } from '/scripts/hacknet/hacknet_daemon';
+import { formatMoney } from '/scripts/util/logging';
 
 export async function main(ns: NS): Promise<void> {
   const FLAGS = ns.flags([
@@ -30,6 +31,6 @@ export async function main(ns: NS): Promise<void> {
 }
 
 function print_params(ns: NS, params: HacknetParams) {
-  ns.tprintf(`${Colors.cyan}  Reserves $${ns.formatNumber(params.reserves, 2, 1000, true)}${Colors.reset}`);
+  ns.tprintf(`${Colors.cyan}  Reserves ${formatMoney(ns, params.reserves)}${Colors.reset}`);
   ns.tprintf(`${Colors.cyan}  Nodes     ${ns.formatNumber(params.minNodes, 0, 1000, true)}${Colors.reset}`);
 }
