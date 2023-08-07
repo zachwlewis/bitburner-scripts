@@ -74,14 +74,18 @@ export async function main(ns: NS): Promise<void> {
   let cycle = 0;
 
   // with 6 jobs and 12 members, we should have two members on each
+  //const cycleTasks = ['Train Combat', 'Mug People', 'Vigilante Justice', 'Territory Warfare'];
   const cycleTasks = [
     'Train Combat',
-    'Train Combat',
+    //'Train Combat',
     'Terrorism',
-    'Terrorism',
+    //'Terrorism',
+    'Human Trafficking',
     'Human Trafficking',
     'Territory Warfare',
+    //'Territory Warfare',
     'Vigilante Justice',
+    //'Vigilante Justice',
   ];
 
   while (true) {

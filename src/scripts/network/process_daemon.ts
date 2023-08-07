@@ -10,9 +10,9 @@ import { disable_logs } from '/scripts/util/logging';
 import { set_cache_resource, get_cache_resource } from '/scripts/util/cache';
 import { AttackRequest, ensure_write, P_ATK_IN } from '/scripts/util/ports';
 
-const attackScript = '/scripts/network/attack_daemon.js';
-const colorScript = '/scripts/util/colors.js';
-const portScript = '/scripts/util/ports.js';
+const attackScript = 'scripts/network/attack_daemon.js';
+const colorScript = 'scripts/util/colors.js';
+const portScript = 'scripts/util/ports.js';
 
 export interface ProcessParams {
   count: number;
@@ -45,6 +45,7 @@ export async function main(ns: NS): Promise<void> {
     let count = getProcessCount(ns, attackScript);
     const saturation = params.count === 0 ? 1 : count / params.count;
     ns.clearLog();
+    ns.print(JSON.stringify(params));
     ns.print(`${count}/${params.count} (${ns.formatPercent(saturation)})`);
 
     // #TODO: Kill hosts when we have too many.
@@ -106,8 +107,11 @@ function getProcessCount(ns: NS, script: string): number {
 }
 
 function getDaemonParams(ns: NS): ProcessParams {
-  const p = get_cache_resource<ProcessParams>(ns, 'process_daemon_params', 'network');
-  if (!p) set_cache_resource<ProcessParams>(ns, 'process_daemon_params', 'network', DEFAULT_PARAMS);
+  let p = get_cache_resource<ProcessParams>(ns, 'process_daemon_params', 'network');
+  if (!p) {
+    set_cache_resource<ProcessParams>(ns, 'process_daemon_params', 'network', DEFAULT_PARAMS);
+    p = DEFAULT_PARAMS;
+  }
 
-  return p || DEFAULT_PARAMS;
+  return p;
 }
